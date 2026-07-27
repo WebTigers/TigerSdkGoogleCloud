@@ -1,0 +1,12 @@
+{
+    "name": "webtigers/tiger-sdk-googlecloud",
+    "description": "Tiger Google Cloud PHP SDK — a provider module that vendors google/cloud-storage so Tiger can use Google Cloud Storage media storage with no Composer on the target.",
+    "type": "tiger-module",
+    "license": "MIT",
+    "keywords": ["tiger", "tiger-module", "sdk", "gcs", "google", "media-storage"],
+    "require": {
+        "php": ">=8.1",
+        "google/cloud-storage": "^1"
+    },
+    "config": { "optimize-autoloader": true, "sort-packages": true }
+}

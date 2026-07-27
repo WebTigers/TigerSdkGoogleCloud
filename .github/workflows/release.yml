@@ -1,0 +1,27 @@
+name: Vendor + release the SDK bundle
+on:
+  schedule: [{ cron: '17 6 * * 1' }]
+  workflow_dispatch: {}
+permissions: { contents: write }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.1', tools: composer }
+      - id: build
+        run: |
+          chmod +x bin/build-bundle.sh
+          ./bin/build-bundle.sh | tee build.log
+          echo "sdk=$(grep '^SDK_VERSION=' build.log | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+          echo "slug=$(grep '^SLUG=' build.log | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+      - id: gate
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          if gh release view "${{ steps.build.outputs.sdk }}" >/dev/null 2>&1; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.gate.outputs.exists == 'false'
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          V="${{ steps.build.outputs.sdk }}"; S="${{ steps.build.outputs.slug }}"
+          gh release create "$V" "dist/$S-$V.zip" "dist/$S-$V.zip.sha256" --title "$V" --notes "Vendored bundle of the SDK ($V) packaged as a Tiger provider module. Install/update via the Tiger Module Manager - no Composer required on the target."
